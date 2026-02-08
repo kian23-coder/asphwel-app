@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ASPHWEL App v1.4 Random News</title>
+<style>
+* { font-family: Arial, sans-serif; margin:0; padding:0; box-sizing:border-box; }
+body { background:#f4f4f4; color:#333; }
+header { background:#ff0000; color:white; padding:10px; text-align:center; }
+.news-ticker {
+  background:#ffeaea;
+  padding:8px 10px;
+  font-weight:bold;
+  color:#c30000;
+  display:flex;
+  justify-content:space-between;
+  font-size:0.95em;
+  border-bottom:2px solid #ff0000;
+}
+.live-clock { font-size:1.5em; text-align:center; margin:5px auto; padding:10px; background:#ffeaea; border-radius:5px; width:fit-content; }
+.ongoing-program { text-align:center; font-size:1.2em; margin-bottom:10px; font-weight:bold; color:#c30000; }
+h2 { margin-top:20px; color:#c30000; }
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th, td { border:1px solid #999; padding:8px; text-align:left; }
+th { background:#ffeaea; }
+tr.ongoing { background:#fff7c2; font-weight:bold; }
+.version-log { background:#e7f3ff; border-left:5px solid #2196F3; padding:10px; margin-top:20px; }
+.internet-news { margin-top:15px; padding:10px; background:#fefefe; border:1px solid #ccc; border-radius:5px; }
+.internet-news h3 { margin:5px 0; color:#c30000; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📺 ASPHWEL App v1.4 (Random Live News)</h1>
+  <p>Asia PH Welcome – Official Schedule (24H)</p>
+</header>
+
+<!-- NEWS TICKER -->
+<div class="news-ticker">
+  <div id="news-ph">🇵🇭 PH News: Loading...</div>
+  <div id="news-asia">🌏 Asia News: Loading...</div>
+</div>
+
+<!-- CLOCK AND ONGOING -->
+<div class="live-clock" id="clock">--:--:--</div>
+<div class="ongoing-program" id="ongoing">ONGOING SCHEDULE: --</div>
+
+<!-- SCHEDULE TABLE -->
+<table id="schedule-table">
+<tr><th>⏰ Time</th><th>📌 Program / Block</th><th>🎯 Description</th></tr>
+<tr data-start="05:00" data-end="07:00"><td>05:00–07:00</td><td>Early Birds</td><td>Morning variety: Faith, News, Wellness</td></tr>
+<tr data-start="07:00" data-end="09:00"><td>07:00–09:00</td><td>Morning Sunshine</td><td>Lifestyle, tips, and lighter entertainment</td></tr>
+<tr data-start="09:00" data-end="10:30"><td>09:00–10:30</td><td>Game Win</td><td>Family-friendly Game Show</td></tr>
+<tr data-start="10:30" data-end="12:00"><td>10:30–12:00</td><td>Showbiz News</td><td>Latest celebrity updates</td></tr>
+<tr data-start="12:00" data-end="14:30"><td>12:00–14:30</td><td>Afternoon PH</td><td>Comedy & cultural segments</td></tr>
+<tr data-start="14:30" data-end="17:00"><td>14:30–17:00</td><td>Movie Hits</td><td>Family-appropriate film block</td></tr>
+<tr data-start="17:00" data-end="18:00"><td>17:00–18:00</td><td>KaWelcome Kids Time</td><td>Interactive kids' shows</td></tr>
+<tr data-start="18:00" data-end="20:00"><td>18:00–20:00</td><td>Balita-Balita Sa Nationwide</td><td>Evening news + weather coverage</td></tr>
+<tr data-start="20:00" data-end="22:30"><td>20:00–22:30</td><td>Primetime Block</td><td>In-depth primetime news continuation</td></tr>
+<tr data-start="22:30" data-end="23:00"><td>22:30–23:00</td><td>Late Welcome Talk</td><td>Talk shows and celebrity interviews</td></tr>
+<tr data-start="23:00" data-end="23:57"><td>23:00–23:57</td><td>Daily Recap</td><td>Highlights and summaries of the day</td></tr>
+<tr data-start="23:57" data-end="23:59"><td>23:57–23:59</td><td>Sign‑Off Announcement</td><td>Closing the day's broadcast</td></tr>
+</table>
+
+<!-- LIVE INTERNET NEWS SECTION -->
+<div class="internet-news">
+  <h3>☀️ Weather</h3>
+  <p id="weather-ph">Loading...</p>
+  <h3>🏆 Sports</h3>
+  <p id="sports-news">Loading...</p>
+  <h3>🎬 Entertainment</h3>
+  <p id="ent-news">Loading...</p>
+</div>
+
+<div class="version-log">
+<p><strong>v1.4 Random News:</strong> Live internet news, weather, sports, entertainment, randomized headlines every minute.</p>
+</div>
+
+<script>
+// ==================== LIVE CLOCK & ONGOING ====================
+function updateClock() {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  const ss = seconds.toString().padStart(2, "0");
+
+  document.getElementById("clock").textContent = `${hh}:${mm}:${ss}`;
+  updateOngoingProgram(hours, minutes);
+}
+
+function updateOngoingProgram(hours, minutes) {
+  const table = document.getElementById("schedule-table");
+  const rows = table.querySelectorAll("tr[data-start]");
+  let currentProgram = "--";
+
+  const nowMinutes = hours * 60 + minutes;
+
+  rows.forEach(row => row.classList.remove("ongoing")); // clear highlights
+
+  rows.forEach(row => {
+    const [startH, startM] = row.dataset.start.split(":").map(Number);
+    const [endH, endM] = row.dataset.end.split(":").map(Number);
+
+    const startTotal = startH * 60 + startM;
+    const endTotal = endH * 60 + endM;
+
+    if (nowMinutes >= startTotal && nowMinutes < endTotal) {
+      currentProgram = row.cells[1].textContent;
+      row.classList.add("ongoing");
+    }
+  });
+
+  document.getElementById("ongoing").textContent = "ONGOING SCHEDULE: " + currentProgram;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==================== RANDOMIZED LIVE INTERNET NEWS ====================
+const API_KEY = "SckkLkJL0qXqdZ0opcnosnQaVOcDMG0vaSNZiPSp"; // TheNewsAPI.com key
+
+async function fetchNewsMultiple(category,country="ph",limit=5) {
+  try {
+    const res = await fetch(`https://api.thenewsapi.com/v1/news/top?api_token=${API_KEY}&language=en&categories=${category}&countries=${country}&limit=${limit}`);
+    const data = await res.json();
+    return data.data || [];
+  } catch(e) { console.error(e); return []; }
+}
+
+// pick random from array
+function randomHeadline(articles) {
+  if (!articles || articles.length===0) return "No data";
+  return articles[Math.floor(Math.random()*articles.length)].title;
+}
+
+async function updateInternetNews() {
+  const phArticles = await fetchNewsMultiple("general","ph",5);
+  const asiaArticles = await fetchNewsMultiple("general","sg,th,my,jp,kr,cn,id,vn",5);
+  const weatherArticles = await fetchNewsMultiple("weather","ph",5);
+  const sportsArticles = await fetchNewsMultiple("sports","ph",5);
+  const entArticles = await fetchNewsMultiple("entertainment","ph",5);
+
+  document.getElementById("news-ph").textContent = "🇵🇭 PH News: " + randomHeadline(phArticles);
+  document.getElementById("news-asia").textContent = "🌏 Asia News: " + randomHeadline(asiaArticles);
+  document.getElementById("weather-ph").textContent = randomHeadline(weatherArticles);
+  document.getElementById("sports-news").textContent = randomHeadline(sportsArticles);
+  document.getElementById("ent-news").textContent = randomHeadline(entArticles);
+}
+
+// update every 60 seconds
+updateInternetNews();
+setInterval(updateInternetNews,60000);
+
+</script>
+
+</body>
+</html>
